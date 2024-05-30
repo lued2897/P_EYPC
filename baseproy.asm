@@ -247,7 +247,8 @@ mouse_no_clic:
 mouse:
 	lee_mouse
 	test bx,0001h 		;Para revisar si el boton izquierdo del mouse fue presionado
-	jz mouse 			;Si el boton izquierdo no fue presionado, vuelve a leer el estado del mouse
+	;jz mouse 			;Si el boton izquierdo no fue presionado, vuelve a leer el estado del mouse
+	jz juego
 
 	;Leer la posicion del mouse y hacer la conversion a resolucion
 	;80x25 (columnas x renglones) en modo texto
@@ -290,6 +291,34 @@ boton_x2:
 boton_x3:
 	;Se cumplieron todas las condiciones
 	jmp salir
+
+juego:
+	;---------------------------------------------------------------------------------------------------------------------
+	mov al,[p1_col]
+	mov ah,[p1_ren]
+	mov [col_aux],al
+	mov [ren_aux],ah
+	call IMPRIME_PLAYER	;imprime jugador 1
+
+	mov al,[p2_col]
+	mov ah,[p2_ren]
+	mov [col_aux],al
+	mov [ren_aux],ah
+	call IMPRIME_PLAYER	;imprime jugador 2
+
+ 	mov ah,01h
+ 	int 16h
+ 	;Si bandera Z=0, entonces hay algo en el buffer, si Z=1, entonces el buffer esta vacio
+ 	jz mouse
+
+ 	call MUEVE_BARRA
+; vacia_buffer:
+ 	mov ah,00h ;vacia buffer
+ 	int 16h
+
+	;call MUEVE_BOLA 
+	jmp mouse
+	;---------------------------------------------------------------------------------------------------------------------
 
 ;Si no se encontró el driver del mouse, muestra un mensaje y el usuario debe salir tecleando [enter]
 teclado:
@@ -558,6 +587,24 @@ salir:				;inicia etiqueta salir
 		ret
 	endp
 
+	BORRA_PLAYER proc
+		posiciona_cursor [ren_aux],[col_aux]
+		imprime_caracter_color 219d,bgNegro,bgNegro
+		dec [ren_aux]
+		posiciona_cursor [ren_aux],[col_aux]
+		imprime_caracter_color 219d,bgNegro,bgNegro
+		dec [ren_aux]
+		posiciona_cursor [ren_aux],[col_aux]
+		imprime_caracter_color 219d,bgNegro,bgNegro
+		add [ren_aux],3
+		posiciona_cursor [ren_aux],[col_aux]
+		imprime_caracter_color 219d,bgNegro,bgNegro
+		inc [ren_aux]
+		posiciona_cursor [ren_aux],[col_aux]
+		imprime_caracter_color 219d,bgNegro,bgNegro
+		ret
+	endp
+
 	;procedimiento IMPRIME_BOLA
 	;Imprime el carácter ☻ (02h en ASCII) en la posición indicada por 
 	;las variables globales
@@ -625,6 +672,103 @@ salir:				;inicia etiqueta salir
 	 	ret 			;Regreso de llamada a procedimiento
 	endp	 			;Indica fin de procedimiento para el ensamblador
 	
+	MUEVE_BOLA proc
+		ret
+	endp
+
+	MUEVE_PLAYER proc
+		ret
+	endp
+
+	MUEVE_BARRA proc
+		;mov ah,01h
+		;int 16h
+		;Si bandera Z=0, entonces hay algo en el buffer, si Z=1, entonces el buffer esta vacio
+		;jz mueve_barra_ret
+
+		;compara el buffer con 1 para mover la barra a la izquierda
+		mov ah,01h
+		int 16h
+		cmp al,49d		;La tecla 1 (49 en ascii) mueve la barra hacia abajo
+		je inc_p1
+
+		;compara el buffer con 2 para mover la barra a la derecha
+		mov ah,01h
+		int 16h
+		cmp al,50d		;La tecla 2 (50 en ascii) mueve la barra hacia arriba
+		je dec_p1
+
+		;compara el buffer con 9 para mover la barra a la izquierda
+		mov ah,01h
+		int 16h
+		cmp al,57d		;La tecla 9 (49 en ascii) mueve la barra hacia abajo
+		je inc_p2
+
+		;compara el buffer con 0 para mover la barra a la derecha
+		mov ah,01h
+		int 16h
+		cmp al,48d		;La tecla 0 (50 en ascii) mueve la barra hacia arriba
+		je dec_p2
+
+		jmp mueve_barra_ret
+
+	dec_p1:
+		mov bl,[p1_ren]
+		cmp bl,7d
+		jbe mueve_barra_ret
+		
+		mov al,[p1_col]
+		mov ah,[p1_ren]
+		mov [col_aux],al
+		mov [ren_aux],ah
+		call BORRA_PLAYER
+		dec [p1_ren]
+		jmp	mueve_barra_ret
+
+	inc_p1:
+		mov bl,[p1_ren]
+		cmp bl,21d
+		jae mueve_barra_ret
+
+		mov al,[p1_col]
+		mov ah,[p1_ren]
+		mov [col_aux],al
+		mov [ren_aux],ah
+		call BORRA_PLAYER
+		inc [p1_ren]
+		jmp	mueve_barra_ret
+
+	dec_p2:
+		mov bl,[p2_ren]
+		cmp bl,7d
+		jbe mueve_barra_ret
+		
+		mov al,[p2_col]
+		mov ah,[p2_ren]
+		mov [col_aux],al
+		mov [ren_aux],ah
+		call BORRA_PLAYER
+		dec [p2_ren]
+		jmp	mueve_barra_ret
+
+	inc_p2:
+		mov bl,[p2_ren]
+		cmp bl,21d
+		jae mueve_barra_ret
+
+		mov al,[p2_col]
+		mov ah,[p2_ren]
+		mov [col_aux],al
+		mov [ren_aux],ah
+		call BORRA_PLAYER
+		inc [p2_ren]
+		jmp	mueve_barra_ret
+	
+	mueve_barra_ret:
+		;mov ah,00h ;vacia buffer
+		;int 16h
+		ret
+	endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;FIN PROCEDIMIENTOS;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
