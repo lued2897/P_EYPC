@@ -72,6 +72,14 @@ p2_ren 			db 		14
 col_aux 		db 		0
 ren_aux 		db 		0
 
+;Variables para almacenar la posicion de la bola
+b_col 			db		40d
+b_ren 			db		14d
+
+;Variables para almacenar la velocidad de la bola
+v_x				db		1		;velocidad horizontal
+v_y				db		1		;Velocidad vertical
+
 ;variable que se utiliza como valor 10 auxiliar en divisiones
 diez 			dw 		10
 
@@ -89,6 +97,9 @@ boton_bg_color	db 		0
 ocho		db 		8
 ;Cuando el driver del mouse no esta disponible
 no_mouse		db 	'No se encuentra driver de mouse. Presione [enter] para salir$'
+
+;Variable para almacenar el tiempo del sistema
+prev_time  dw      ?		;tiempo en ticks
 
 ;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;Macros;;;;;;;;;
@@ -230,6 +241,11 @@ inicio:					;etiqueta inicio
 	lea dx,[no_mouse]
 	mov ax,0900h	;opcion 9 para interrupcion 21h
 	int 21h			;interrupcion 21h. Imprime cadena.
+
+	mov ah,0				;Inicializa en tiempo
+    int 1Ah
+    mov prev_time,dx		;Establece el tiempo de inicio para calcular los ticks
+
 	jmp teclado		;salta a 'teclado'
 imprime_ui:
 	clear 					;limpia pantalla
@@ -304,19 +320,21 @@ juego:
 	mov ah,[p2_ren]
 	mov [col_aux],al
 	mov [ren_aux],ah
-	call IMPRIME_PLAYER	;imprime jugador 2
+	call IMPRIME_PLAYER	;imprime jugador 2 
 
  	mov ah,01h
  	int 16h
  	;Si bandera Z=0, entonces hay algo en el buffer, si Z=1, entonces el buffer esta vacio
- 	jz mouse
+ 	jz movimiento_bola
 
  	call MUEVE_BARRA
 ; vacia_buffer:
  	mov ah,00h ;vacia buffer
  	int 16h
 
-	;call MUEVE_BOLA 
+movimiento_bola:
+	call MUEVE_BOLA
+
 	jmp mouse
 	;---------------------------------------------------------------------------------------------------------------------
 
@@ -610,8 +628,16 @@ salir:				;inicia etiqueta salir
 	;las variables globales
 	;ren_aux y col_aux
 	IMPRIME_BOLA proc
-		posiciona_cursor [ren_aux],[col_aux]
+		;posiciona_cursor [ren_aux],[col_aux]
+		posiciona_cursor [b_ren],[b_col]
 		imprime_caracter_color 2d,cCyanClaro,bgNegro 
+		ret
+	endp
+
+
+	BORRA_BOLA proc
+		posiciona_cursor [b_ren],[b_col]
+		imprime_caracter_color 219d,bgNegro,bgNegro 
 		ret
 	endp
 
@@ -673,6 +699,76 @@ salir:				;inicia etiqueta salir
 	endp	 			;Indica fin de procedimiento para el ensamblador
 	
 	MUEVE_BOLA proc
+		mov ah,0
+		int 1Ah			;dx=numero de ticks 2
+
+		mov ax,dx
+		sub ax,[prev_time]
+		cmp ax,1		;Si han 2 ticks o mas ejecuta el codigo
+		jb ret_bola
+
+		mov prev_time,dx
+		call BORRA_BOLA
+
+		;Cambio de direccion (bordes)
+		mov al,b_col			
+		cmp al, 78				;limite derecho horizontal
+		je	cambia_X
+		cmp al,1				;Limite izquierdo horizontal
+		je	cambia_X
+
+		mov al,b_ren
+		cmp al,5				;Limite superior horizontal
+		je cambia_Y
+		cmp al,23				;Limite inferior horizontal
+		je cambia_Y
+
+		;Cambio de direccion (barra/obstaculos)
+
+		mov cl, b_col
+		mov ch, b_ren
+
+		add cl,v_x
+		posiciona_cursor [b_ren],cl
+		mov ah,08h
+		int 10h
+		cmp ah,cBlanco
+		je cambia_X						;caso 1, la casilla inmediata horizontal es una barra/obstaculo
+
+		add ch,v_y
+		posiciona_cursor ch,[b_col]
+		mov ah,08h
+		int 10h
+		cmp ah,cBlanco
+		je cambia_Y						;Caso 2, la casilla inmediata vertical es una barra/obstaculo
+
+		posiciona_cursor ch,cl
+		mov ah,08h
+		int 10h
+		cmp ah,cBlanco
+		je cambia_XY					;caso 3, La siguiente posicion es una barra/obstaculo
+
+		jmp next_pos
+
+	cambia_X:
+		neg [v_x]
+		jmp next_pos
+	cambia_Y:
+		neg [v_y]
+		jmp next_pos
+	cambia_XY:
+		neg [v_x]
+		neg [v_y]
+		jmp next_pos
+
+	next_pos:
+		mov al, v_x
+		mov ah, v_y
+		add [b_col],al
+		add [b_ren],ah
+		call IMPRIME_BOLA
+
+	ret_bola:
 		ret
 	endp
 
