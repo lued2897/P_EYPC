@@ -87,6 +87,9 @@ aux 			dw		1		;Variable auxiliar para division
 ;Una variable contador para algunos loops
 conta 			db 		0
 
+;Variable para controlar si se ejecuta el segmento "juego"
+pausa			db 		0	;1=pausa, 0=continua
+
 ;Variables que sirven de parametros para el procedimiento IMPRIME_BOTON
 boton_caracter 	db 		0
 boton_renglon 	db 		0
@@ -265,7 +268,7 @@ mouse:
 	lee_mouse
 	test bx,0001h 		;Para revisar si el boton izquierdo del mouse fue presionado
 	;jz mouse 			;Si el boton izquierdo no fue presionado, vuelve a leer el estado del mouse
-	jz juego
+	jz verifica_pausa
 
 	;Leer la posicion del mouse y hacer la conversion a resolucion
 	;80x25 (columnas x renglones) en modo texto
@@ -309,6 +312,9 @@ boton_x3:
 	;Se cumplieron todas las condiciones
 	jmp salir
 
+verifica_pausa:
+	cmp [pausa],1
+	je mouse
 juego:
 	;---------------------------------------------------------------------------------------------------------------------
 	mov al,[p1_col]
@@ -767,11 +773,23 @@ salir:				;inicia etiqueta salir
 		mov dx,1
 		call RESET_BOLA
 		call IMPRIME_BOLA
+		
+		cmp p1_score,10
+		jae termina_juego
+
 		jmp ret_bola
 	reset_p2:
 		mov dx,2
 		call RESET_BOLA
 		call IMPRIME_BOLA
+
+		cmp p1_score,10
+		jae termina_juego
+
+		jmp ret_bola
+
+	termina_juego:
+		mov [pausa],1
 		jmp ret_bola
 
 	next_pos:
