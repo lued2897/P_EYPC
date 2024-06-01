@@ -364,10 +364,34 @@ reiniciar_juego:
 		mov [col_aux],al
 		mov [ren_aux],ah
 		call BORRA_PLAYER
-
+		;Reiniciar Bola
 		mov dx,0
 		call RESET_BOLA
+		call IMPRIME_BOLA
+		;Reiniciar obstaculos
+		mov bh,obstaculo1_ren
+		mov bl,obstaculo1_col
+		mov ren_aux,bh
+		mov col_aux,bl
+		call BORRA_OBSTACULO
+		inc ren_aux
+		call BORRA_OBSTACULO
+		inc col_aux
+		call BORRA_OBSTACULO
+		dec ren_aux
+		call BORRA_OBSTACULO
 
+		mov bh,obstaculo2_ren
+		mov bl,obstaculo2_col
+		mov ren_aux,bh
+		mov col_aux,bl
+		call BORRA_OBSTACULO
+		inc ren_aux
+		call BORRA_OBSTACULO
+		inc col_aux
+		call BORRA_OBSTACULO
+		dec ren_aux
+		call BORRA_OBSTACULO
 
 		;Reiniciar los datos.
 		call IMPRIME_DATOS_INICIALES
@@ -766,6 +790,20 @@ salir:				;inicia etiqueta salir
 	 	ret 			;Regreso de llamada a procedimiento
 	endp	 			;Indica fin de procedimiento para el ensamblador
 	
+	BORRA_OBSTACULO proc
+        ;Posicionar cursor e imprimir un caracter cuyo ASCII es 178d para un obstaculo
+        posiciona_cursor [ren_aux],[col_aux]
+        imprime_caracter_color 219,cNegro,cNegro
+
+        ;;;;;;;;;;;;;;;;;;;;
+        ;Completar procedimiento para que el área comprendida de un obstaculo cumpla con los requisitos
+        ;;;;;;;;;;;;;;;;;;;;
+
+
+	 	ret 			;Regreso de llamada a procedimiento
+	endp	
+
+
 	MUEVE_BOLA proc
 		mov ah,0
 		int 1Ah			;dx=numero de ticks 2
