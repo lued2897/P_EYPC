@@ -713,9 +713,9 @@ salir:				;inicia etiqueta salir
 		;Cambio de direccion (bordes)
 		mov al,b_col			
 		cmp al, 78				;limite derecho horizontal
-		je	cambia_X
+		je	reset_p1
 		cmp al,1				;Limite izquierdo horizontal
-		je	cambia_X
+		je	reset_p2
 
 		mov al,b_ren
 		cmp al,5				;Limite superior horizontal
@@ -761,6 +761,17 @@ salir:				;inicia etiqueta salir
 		neg [v_y]
 		jmp next_pos
 
+	reset_p1:
+		mov dx,1
+		call RESET_BOLA
+		call IMPRIME_BOLA
+		jmp ret_bola
+	reset_p2:
+		mov dx,2
+		call RESET_BOLA
+		call IMPRIME_BOLA
+		jmp ret_bola
+
 	next_pos:
 		mov al, v_x
 		mov ah, v_y
@@ -771,6 +782,43 @@ salir:				;inicia etiqueta salir
 	ret_bola:
 		ret
 	endp
+
+	RESET_BOLA proc ;recibe dx, dx=1 jugador 1, dx=2 jugador 2
+		cmp dx,1
+		je punto_p1
+		cmp dx,2
+		je punto_p2
+		jmp ret_reset_bola
+	punto_p1:
+		inc [p1_score]
+		mov [col_aux],4
+		mov bl,[p1_score]
+		call IMPRIME_SCORE_BL
+
+		mov ah, 0Eh
+		mov al, 07h ; ASCII code for bell character
+		int 10h
+
+		jmp ret_reset_bola
+	punto_p2:
+		inc [p2_score]
+		mov [col_aux],76
+		mov bl,[p2_score]
+
+		mov ah, 0Eh
+		mov al, 07h ; ASCII code for bell character
+		int 10h
+
+		call IMPRIME_SCORE_BL
+	ret_reset_bola:
+		mov b_col,40
+		mov b_ren,14
+		;mov v_x,1
+		;mov v_y,1
+		mov dx,0
+		ret
+	endp
+
 
 	MUEVE_PLAYER proc
 		ret
