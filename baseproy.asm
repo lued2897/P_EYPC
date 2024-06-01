@@ -1023,10 +1023,10 @@ salir:				;inicia etiqueta salir
 		div aux_division
 		add [ren_aux],dl
 
-		mov bx,ren_aux
-		mov [obstaculo1_ren+di],bx
-		mov bx,col_aux
-		mov [obstaculo1_col+di],bx
+		mov bh,ren_aux
+		mov [obstaculo1_ren+di],bh
+		mov bh,col_aux
+		mov [obstaculo1_col+di],bh
 
 		push cx
 		call IMPRIME_OBSTACULO
