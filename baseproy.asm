@@ -302,7 +302,7 @@ mouse:
 
 	cmp dx,3
 	je boton_stop
-	
+
 	jmp mouse_no_clic
 
 boton_x:
@@ -339,12 +339,33 @@ boton_stop2:
 	jmp mouse_no_clic
 
 boton_stop3:
+	cmp [pausa],1
+	je reiniciar_juego
 	mov [pausa],1
 
 
 verifica_pausa:
 	cmp [pausa],1
 	je mouse
+
+reiniciar_juego:
+		;Player1
+		mov al,[p1_col]
+		mov ah,[p1_ren]
+		mov [col_aux],al
+		mov [ren_aux],ah
+		call BORRA_PLAYER
+		;Player2
+		mov al,[p2_col]
+		mov ah,[p2_ren]
+		mov [col_aux],al
+		mov [ren_aux],ah
+		call BORRA_PLAYER
+		;Reiniciar
+		call IMPRIME_DATOS_INICIALES
+		mov v_y,1
+		mov v_x,1
+		
 juego:
 	;---------------------------------------------------------------------------------------------------------------------
 	mov al,[p1_col]
