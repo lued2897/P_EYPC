@@ -294,9 +294,25 @@ mouse:
 	cmp dx,0
 	je boton_x
 
+	cmp dx,1
+	je boton_stop
+
+	cmp dx,2
+	je boton_stop
+
+	cmp dx,3
+	je boton_stop
+	
 	jmp mouse_no_clic
+
 boton_x:
 	jmp boton_x1
+
+boton_stop:
+	jmp boton_stop1
+
+;boton_pause:
+	;jmp boton_pause1
 
 ;Lógica para revisar si el mouse fue presionado en [X]
 ;[X] se encuentra en renglon 0 y entre columnas 76 y 78
@@ -311,6 +327,20 @@ boton_x2:
 boton_x3:
 	;Se cumplieron todas las condiciones
 	jmp salir
+
+boton_stop1:
+	cmp cx,34
+	jge boton_stop2
+	jmp mouse_no_clic
+
+boton_stop2:
+	cmp cx,36
+	jbe boton_stop3
+	jmp mouse_no_clic
+
+boton_stop3:
+	mov [pausa],1
+
 
 verifica_pausa:
 	cmp [pausa],1
