@@ -83,6 +83,13 @@ v_y				db		1		;Velocidad vertical
 ;variable que se utiliza como valor 10 auxiliar en divisiones
 diez 			dw 		10
 aux 			dw		1		;Variable auxiliar para division
+aux_division dw 1
+
+;Variables de la posicion de los obstaculos.
+obstaculo1_ren db 0
+obstaculo2_ren db 0 
+obstaculo1_col db 0
+obstaculo2_col db 0
 
 ;Una variable contador para algunos loops
 conta 			db 		0
@@ -357,10 +364,14 @@ reiniciar_juego:
 		mov [col_aux],al
 		mov [ren_aux],ah
 		call BORRA_PLAYER
-		;Reiniciar
+
+		mov dx,0
+		call RESET_BOLA
+
+
+		;Reiniciar los datos.
 		call IMPRIME_DATOS_INICIALES
-		mov v_y,1
-		mov v_x,1
+		
 verifica_pausa:
 	cmp [pausa],1
 	je mouse		
@@ -979,14 +990,21 @@ salir:				;inicia etiqueta salir
 		mov [ren_aux],6
 		mov [col_aux],20
 		mov cx,2
+
+		lea di,obstaculo1_ren
+		lea si,obstaculo1_col
+
+		xor di,di
+
+
 	INICIO_OBSTACULOS:
 		;20-59
 		;cordenada en x del obstaculo
 		mov [aux],dx
 		mov ax,dx
 		mov dx,0
-		mov bx,39
-		div bx
+		mov aux_division,39
+		div aux_division
 		add [col_aux],dl
 
 		; mov ax,39
@@ -1001,9 +1019,12 @@ salir:				;inicia etiqueta salir
 		; add [ren_aux],dl
 		mov ax,[aux]
 		mov dx,0
-		mov bx,6
-		div bx
+		mov aux_division,6
+		div aux_division
 		add [ren_aux],dl
+
+		mov [obstaculo1_ren+di],[ren_aux]
+		mov [obstaculo1_col+di],[col_aux]
 
 		push cx
 		call IMPRIME_OBSTACULO
@@ -1019,6 +1040,8 @@ salir:				;inicia etiqueta salir
 		mov [col_aux],20
 		mov dx,[aux]
 		add dx,256
+
+		inc di
 
 		loop INICIO_OBSTACULOS
 		
