@@ -343,11 +343,7 @@ boton_stop3:
 	je reiniciar_juego
 	mov [pausa],1
 
-
-verifica_pausa:
-	cmp [pausa],1
-	je mouse
-
+	jmp mouse
 reiniciar_juego:
 		;Player1
 		mov al,[p1_col]
@@ -365,7 +361,9 @@ reiniciar_juego:
 		call IMPRIME_DATOS_INICIALES
 		mov v_y,1
 		mov v_x,1
-		
+verifica_pausa:
+	cmp [pausa],1
+	je mouse		
 juego:
 	;---------------------------------------------------------------------------------------------------------------------
 	mov al,[p1_col]
