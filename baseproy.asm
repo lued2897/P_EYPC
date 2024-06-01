@@ -82,6 +82,7 @@ v_y				db		1		;Velocidad vertical
 
 ;variable que se utiliza como valor 10 auxiliar en divisiones
 diez 			dw 		10
+aux 			dw		1		;Variable auxiliar para division
 
 ;Una variable contador para algunos loops
 conta 			db 		0
@@ -498,21 +499,22 @@ salir:				;inicia etiqueta salir
         ;; no debe salir del area de juego
         mov [col_aux],24
         mov [ren_aux],9
-        call IMPRIME_OBSTACULO
+        ;call IMPRIME_OBSTACULO
+		call IMPRIME_OBSTACULOS
 
         ;imprime obstaculo
         ;; Deberan calcular la posicion de manera aleatoria
         ;; no debe salir del area de juego
         mov [col_aux],60
         mov [ren_aux],8
-        call IMPRIME_OBSTACULO
+        ;call IMPRIME_OBSTACULO
 
         ;imprime obstaculo
         ;; Deberan calcular la posicion de manera aleatoria
         ;; no debe salir del area de juego
         mov [col_aux],40
         mov [ren_aux],22
-        call IMPRIME_OBSTACULO
+        ;call IMPRIME_OBSTACULO
 
 		;imprime players
 		;player 1
@@ -794,21 +796,11 @@ salir:				;inicia etiqueta salir
 		mov [col_aux],4
 		mov bl,[p1_score]
 		call IMPRIME_SCORE_BL
-
-		mov ah, 0Eh
-		mov al, 07h ; ASCII code for bell character
-		int 10h
-
 		jmp ret_reset_bola
 	punto_p2:
 		inc [p2_score]
 		mov [col_aux],76
 		mov bl,[p2_score]
-
-		mov ah, 0Eh
-		mov al, 07h ; ASCII code for bell character
-		int 10h
-
 		call IMPRIME_SCORE_BL
 	ret_reset_bola:
 		mov b_col,40
@@ -911,6 +903,59 @@ salir:				;inicia etiqueta salir
 	mueve_barra_ret:
 		;mov ah,00h ;vacia buffer
 		;int 16h
+		ret
+	endp
+
+	IMPRIME_OBSTACULOS proc 
+		mov ah,0				;tiempo del sistema
+		int 1Ah					;dx=tiempo
+		mov [ren_aux],6
+		mov [col_aux],20
+		mov cx,2
+	INICIO_OBSTACULOS:
+		;20-59
+		;cordenada en x del obstaculo
+		mov [aux],dx
+		mov ax,dx
+		mov dx,0
+		mov bx,39
+		div bx
+		add [col_aux],dl
+
+		; mov ax,39
+		; mov [aux],dx
+		; mov dx,0
+		; div [aux]
+		; add [col_aux],dl
+		;cordenada en y
+		; mov ax,6
+		; mov dx,0
+		; div [aux]
+		; add [ren_aux],dl
+		mov ax,[aux]
+		mov dx,0
+		mov bx,6
+		div bx
+		add [ren_aux],dl
+
+		push cx
+		call IMPRIME_OBSTACULO
+		inc [col_aux]
+		call IMPRIME_OBSTACULO
+		inc [ren_aux]
+		call IMPRIME_OBSTACULO
+		dec [col_aux]
+		call IMPRIME_OBSTACULO
+		pop cx
+
+		mov [ren_aux],15
+		mov [col_aux],20
+		mov dx,[aux]
+		add dx,256
+
+		loop INICIO_OBSTACULOS
+		
+
 		ret
 	endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
