@@ -783,7 +783,7 @@ salir:				;inicia etiqueta salir
 		call RESET_BOLA
 		call IMPRIME_BOLA
 
-		cmp p1_score,10
+		cmp p2_score,10
 		jae termina_juego
 
 		jmp ret_bola
