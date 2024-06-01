@@ -366,6 +366,7 @@ reiniciar_juego:
 		call BORRA_PLAYER
 		;Reiniciar Bola
 		mov dx,0
+		CALL BORRA_BOLA
 		call RESET_BOLA
 		call IMPRIME_BOLA
 		;Reiniciar obstaculos
@@ -395,6 +396,8 @@ reiniciar_juego:
 
 		;Reiniciar los datos.
 		call IMPRIME_DATOS_INICIALES
+
+		mov pausa,0
 		
 verifica_pausa:
 	cmp [pausa],1
