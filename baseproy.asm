@@ -96,6 +96,7 @@ conta 			db 		0
 
 ;Variable para controlar si se ejecuta el segmento "juego"
 pausa			db 		0	;1=pausa, 0=continua
+fin_del_juego	db 		0
 
 ;Variables que sirven de parametros para el procedimiento IMPRIME_BOTON
 boton_caracter 	db 		0
@@ -334,12 +335,15 @@ boton_stop:
 	cmp [pausa],1
 	je reiniciar_juego
 	mov [pausa],1
+	mov [fin_del_juego],1
 
 	jmp mouse_no_clic
 
 boton_pausa:
 	cmp [pausa],0
 	je pausar_juego
+	cmp [fin_del_juego],1
+	je mouse_no_clic
 	mov [pausa],0
 
 	jmp mouse_no_clic
@@ -428,6 +432,7 @@ reiniciar_juego:
 		call IMPRIME_DATOS_INICIALES
 
 		mov pausa,0
+		mov [fin_del_juego],0
 		jmp mouse_no_clic
 verifica_pausa:
 	cmp [pausa],1
@@ -921,6 +926,7 @@ salir:				;inicia etiqueta salir
 
 	termina_juego:
 		mov [pausa],1
+		mov [fin_del_juego],1
 		jmp ret_bola
 
 	next_pos:
