@@ -115,6 +115,7 @@ no_mouse		db 	'No se encuentra driver de mouse. Presione [enter] para salir$'
 
 ;Variable para almacenar el tiempo del sistema
 prev_time  dw      ?		;tiempo en ticks
+prev_time_barra  dw      ?		;tiempo en ticks para la barra
 
 ;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;Macros;;;;;;;;;
@@ -260,6 +261,7 @@ inicio:					;etiqueta inicio
 	mov ah,0				;Inicializa en tiempo
     int 1Ah
     mov prev_time,dx		;Establece el tiempo de inicio para calcular los ticks
+	mov prev_time_barra,dx
 
 	jmp teclado		;salta a 'teclado'
 imprime_ui:
@@ -459,7 +461,8 @@ juego:
  	;Si bandera Z=0, entonces hay algo en el buffer, si Z=1, entonces el buffer esta vacio
 
 	;Compara el caracter en el buffer para determinar que procedimiento ejecutar
-	jz movimiento_bola
+	;jz movimiento_bola
+	jz verifica_AI
 	cmp al,49
 	jb mueve_2
 	cmp al,50
@@ -468,9 +471,17 @@ juego:
  	call MUEVE_BARRA1
 	mov ah,00h ;vacia buffer
  	int 16h
+
+verifica_AI:
+	cmp [AI_Control],1
+	je mueve_2
 	jmp movimiento_bola
 
 mueve_2:
+	cmp [AI_Control],1
+	je control_AI
+
+	;Controlado por el jugador
 	mov ah,01h
  	int 16h
  	;Si bandera Z=0, entonces hay algo en el buffer, si Z=1, entonces el buffer esta vacio
@@ -478,11 +489,32 @@ mueve_2:
 	call MUEVE_BARRA2
 	mov ah,00h ;vacia buffer
  	int 16h
- 	
+	jmp movimiento_bola
+control_AI:
+	mov ah,01h
+ 	int 16h
+	jz continua_AI
+
+	mov ah,00h ;vacia buffer
+ 	int 16h
+
+	continua_AI:
+	call MUEVE_BARRA2
 
 movimiento_bola:
-	call MUEVE_BOLA
+	mov al,[p1_col]
+	mov ah,[p1_ren]
+	mov [col_aux],al
+	mov [ren_aux],ah
+	call IMPRIME_PLAYER	;imprime jugador 1
 
+	mov al,[p2_col]
+	mov ah,[p2_ren]
+	mov [col_aux],al
+	mov [ren_aux],ah
+	call IMPRIME_PLAYER	;imprime jugador 2
+
+	call MUEVE_BOLA
 	jmp mouse
 	;---------------------------------------------------------------------------------------------------------------------
 
@@ -1041,7 +1073,8 @@ salir:				;inicia etiqueta salir
 	endp
 
 	MUEVE_BARRA2 proc
-
+		cmp [AI_Control],1
+		je computadora
 		;compara el buffer con 9 para mover la barra a la izquierda
 		mov ah,01h
 		int 16h
@@ -1081,6 +1114,21 @@ salir:				;inicia etiqueta salir
 		call BORRA_PLAYER
 		inc [p2_ren]
 		jmp	mueve_barra2_ret
+
+	computadora:
+
+		mov ah,0
+		int 1Ah
+		mov ax,dx
+		sub ax,[prev_time_barra]
+		cmp ax,2
+		jb mueve_barra2_ret
+
+		mov [prev_time_barra],dx
+		mov al,[b_ren]
+		cmp al,[p2_ren]
+		jl dec_p2
+		jmp inc_p2
 
 	mueve_barra2_ret:
 		ret
