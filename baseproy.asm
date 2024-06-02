@@ -302,21 +302,51 @@ mouse:
 	je boton_x
 
 	cmp dx,1
-	je boton_stop
+	;je boton_stop
+	je botones
 
 	cmp dx,2
-	je boton_stop
+	;je boton_stop
+	je botones
 
 	cmp dx,3
-	je boton_stop
+	;je boton_stop
+	je botones
 
 	jmp mouse_no_clic
 
+botones:
+	cmp cx,33
+	jbe mouse_no_clic
+	cmp cx,46
+	jge mouse_no_clic
+	cmp cx,36
+	jbe boton_stop
+	cmp cx,43
+	jge boton_pausa
+
+	jmp mouse_no_clic
 boton_x:
 	jmp boton_x1
 
 boton_stop:
-	jmp boton_stop1
+	;jmp boton_stop1
+	cmp [pausa],1
+	je reiniciar_juego
+	mov [pausa],1
+
+	jmp mouse_no_clic
+
+boton_pausa:
+	cmp [pausa],0
+	je pausar_juego
+	mov [pausa],0
+
+	jmp mouse_no_clic
+
+pausar_juego:
+	mov [pausa],1
+	jmp mouse_no_clic
 
 ;boton_pause:
 	;jmp boton_pause1
@@ -335,22 +365,22 @@ boton_x3:
 	;Se cumplieron todas las condiciones
 	jmp salir
 
-boton_stop1:
-	cmp cx,34
-	jge boton_stop2
-	jmp mouse_no_clic
+; boton_stop1:
+; 	cmp cx,34
+; 	jge boton_stop2
+; 	jmp mouse_no_clic
 
-boton_stop2:
-	cmp cx,36
-	jbe boton_stop3
-	jmp mouse_no_clic
+; boton_stop2:
+; 	cmp cx,36
+; 	jbe boton_stop3
+; 	jmp mouse_no_clic
 
-boton_stop3:
-	cmp [pausa],1
-	je reiniciar_juego
-	mov [pausa],1
+; boton_stop3:
+; 	cmp [pausa],1
+; 	je reiniciar_juego
+; 	mov [pausa],1
 
-	jmp mouse
+; 	jmp mouse_no_clic
 reiniciar_juego:
 		;Player1
 		mov al,[p1_col]
@@ -397,7 +427,8 @@ reiniciar_juego:
 		;Reiniciar los datos.
 		call IMPRIME_DATOS_INICIALES
 
-		mov pausa,0
+		mov pausa,1
+		jmp mouse
 		
 verifica_pausa:
 	cmp [pausa],1
