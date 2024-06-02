@@ -427,9 +427,8 @@ reiniciar_juego:
 		;Reiniciar los datos.
 		call IMPRIME_DATOS_INICIALES
 
-		mov pausa,1
-		jmp mouse
-		
+		mov pausa,0
+		jmp mouse_no_clic
 verifica_pausa:
 	cmp [pausa],1
 	je mouse		
