@@ -56,6 +56,8 @@ bgBlanco 		equ		0F0h
 titulo 			db 		"PONJ"
 player1 		db 		"Player 1"
 player2 		db 		"Player 2"
+gana			db		"Won!"
+empate			db		"DRAW"
 p1_score 		db 		0
 p2_score		db 		0
 
@@ -305,7 +307,8 @@ mouse:
 	;Si el mouse fue presionado en el renglon 0
 	;se va a revisar si fue dentro del boton [X]
 	cmp dx,0
-	je boton_x
+	;je boton_x
+	je primer_renglon
 
 	cmp dx,1
 	;je boton_stop
@@ -332,8 +335,28 @@ botones:
 	jge boton_pausa
 
 	jmp mouse_no_clic
-boton_x:
-	jmp boton_x1
+;boton_x:
+primer_renglon:
+	cmp cx,0
+	jbe mouse_no_clic
+	cmp cx,79
+	jge mouse_no_clic
+	cmp cx,3
+	jbe boton_cpu
+	cmp cx,76
+	jge boton_x3
+	
+	jmp mouse_no_clic
+
+boton_cpu:
+	cmp [AI_Control],1
+	je juego_vs_jugador
+	mov [AI_Control],1
+	jmp mouse_no_clic
+
+juego_vs_jugador:
+	mov [AI_Control],0
+	jmp mouse_no_clic
 
 boton_stop:
 	;jmp boton_stop1
@@ -342,6 +365,7 @@ boton_stop:
 	mov [pausa],1
 	mov [fin_del_juego],1
 
+	call IMPRIME_CUADRO
 	jmp mouse_no_clic
 
 boton_pausa:
@@ -392,6 +416,8 @@ boton_x3:
 ; 	jmp mouse_no_clic
 reiniciar_juego:
 		;Player1
+		call BORRA_CUADRO
+
 		mov al,[p1_col]
 		mov ah,[p1_ren]
 		mov [col_aux],al
@@ -435,6 +461,11 @@ reiniciar_juego:
 
 		;Reiniciar los datos.
 		call IMPRIME_DATOS_INICIALES
+
+		posiciona_cursor 2,5
+		imprime_caracter_color 219,cNegro,bgNegro 
+		posiciona_cursor 2,77
+		imprime_caracter_color 219,cNegro,bgNegro
 
 		mov pausa,0
 		mov [fin_del_juego],0
@@ -645,6 +676,14 @@ salir:				;inicia etiqueta salir
 		imprime_cadena_color [titulo],4,cBlanco,bgNegro
 
 		call IMPRIME_DATOS_INICIALES
+
+		posiciona_cursor 0,1
+		imprime_caracter_color 67,cRojoClaro,bgNegro
+		posiciona_cursor 0,2
+		imprime_caracter_color 80,cRojoClaro,bgNegro
+		posiciona_cursor 0,3
+		imprime_caracter_color 85,cRojoClaro,bgNegro
+
 		ret
 	endp
 
@@ -761,6 +800,7 @@ salir:				;inicia etiqueta salir
 		dec [conta]
 		cmp [conta],0
 		ja imprime_digito
+
 		ret
 	endp
 
@@ -978,6 +1018,7 @@ salir:				;inicia etiqueta salir
 	termina_juego:
 		mov [pausa],1
 		mov [fin_del_juego],1
+		call IMPRIME_CUADRO
 		jmp ret_bola
 
 	next_pos:
@@ -1197,7 +1238,136 @@ salir:				;inicia etiqueta salir
 
 		loop INICIO_OBSTACULOS
 		
+		ret
+	endp
 
+	BORRA_CUADRO proc
+		mov cx,16
+		loop_limpia_cuadro1:
+		mov [col_aux],31
+		add [col_aux],cl
+		push cx
+		posiciona_cursor 10,[col_aux]
+		imprime_caracter_color 219,cNegro,bgNegro
+		posiciona_cursor 11,[col_aux]
+		imprime_caracter_color 219,cNegro,bgNegro
+		pop cx
+		loop loop_limpia_cuadro1
+
+		mov cx,16
+		loop_limpia_cuadro2:
+		mov [col_aux],31
+		add [col_aux],cl
+		push cx
+		posiciona_cursor 12,[col_aux]
+		imprime_caracter_color 219,cNegro,bgNegro
+		posiciona_cursor 13,[col_aux]
+		imprime_caracter_color 219,cNegro,bgNegro
+		pop cx
+		loop loop_limpia_cuadro2
+
+		mov cx,16
+		loop_limpia_cuadro3:
+		mov [col_aux],31
+		add [col_aux],cl
+		push cx
+		posiciona_cursor 14,[col_aux]
+		imprime_caracter_color 219,cNegro,bgNegro
+		posiciona_cursor 15,[col_aux]
+		imprime_caracter_color 219,cNegro,bgNegro
+		pop cx
+		loop loop_limpia_cuadro3
+		ret
+	endp
+
+	IMPRIME_CUADRO proc
+		posiciona_cursor 10,32
+		imprime_caracter_color marcoEsqSupIzq,cAmarillo,bgNegro
+		posiciona_cursor 10,47
+		imprime_caracter_color marcoEsqSupDer,cAmarillo,bgNegro
+		posiciona_cursor 15,32
+		imprime_caracter_color marcoEsqInfIzq,cAmarillo,bgNegro
+		posiciona_cursor 15,47
+		imprime_caracter_color marcoEsqInfDer,cAmarillo,bgNegro
+
+
+		mov cx,14
+		loop_cuadro_horizontal:
+		mov [col_aux],32
+		add [col_aux],cl
+		push cx
+		posiciona_cursor 15,[col_aux]
+		imprime_caracter_color marcoHor,cAmarillo,bgNegro
+		posiciona_cursor 10,[col_aux]
+		imprime_caracter_color marcoHor,cAmarillo,bgNegro
+
+		pop cx
+		loop loop_cuadro_horizontal
+
+		mov cx,14
+		loop_limpia1:
+		mov [col_aux],32
+		add [col_aux],cl
+		push cx
+		posiciona_cursor 11,[col_aux]
+		imprime_caracter_color 219,cNegro,bgNegro
+		posiciona_cursor 12,[col_aux]
+		imprime_caracter_color 219,cNegro,bgNegro
+		pop cx
+		loop loop_limpia1
+
+		mov cx,14
+		loop_limpia2:
+		mov [col_aux],32
+		add [col_aux],cl
+		push cx
+		posiciona_cursor 13,[col_aux]
+		imprime_caracter_color 219,cNegro,bgNegro
+		posiciona_cursor 14,[col_aux]
+		imprime_caracter_color 219,cNegro,bgNegro
+		pop cx
+		loop loop_limpia2
+
+		mov cx,4
+		loop_cuadro_vertical:
+		mov [ren_aux],10
+		add [ren_aux],cl
+		push cx
+		posiciona_cursor [ren_aux],32
+		imprime_caracter_color marcoVer,cAmarillo,bgNegro
+		posiciona_cursor [ren_aux],47
+		imprime_caracter_color marcoVer,cAmarillo,bgNegro
+		pop cx
+		loop loop_cuadro_vertical
+
+
+		mov al,[p1_score]
+		cmp [p2_score],al
+		ja	imprime_p2
+		cmp [p2_score],al
+		je imprime_empate
+
+		posiciona_cursor 12,36
+		imprime_cadena_color player1,8,cBlanco,bgNegro
+
+		posiciona_cursor 13,38
+		imprime_cadena_color [gana],4,cBlanco,bgNegro
+		jmp ret_imprime_cuadro
+
+	imprime_p2:
+		posiciona_cursor 12,36
+		imprime_cadena_color player2,8,cBlanco,bgNegro
+
+		posiciona_cursor 13,38
+		imprime_cadena_color [gana],4,cBlanco,bgNegro
+		jmp ret_imprime_cuadro
+
+	imprime_empate:
+
+		posiciona_cursor 12,38
+		imprime_cadena_color [empate],4,cBlanco,bgNegro
+
+	ret_imprime_cuadro:
 		ret
 	endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
