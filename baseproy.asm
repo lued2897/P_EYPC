@@ -305,11 +305,12 @@ mouse:
 ;Aqui va la lógica de la posicion del mouse;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	;Si el mouse fue presionado en el renglon 0
-	;se va a revisar si fue dentro del boton [X]
+	;se va a revisar si fue dentro del boton [X] o  en el boton CPU
 	cmp dx,0
 	;je boton_x
 	je primer_renglon
 
+	;comparaciones para comprobar si el cursor se encuentra sobre los renglones 1,2 o 3
 	cmp dx,1
 	;je boton_stop
 	je botones
@@ -324,61 +325,62 @@ mouse:
 
 	jmp mouse_no_clic
 
+	;Compara la posicion del mouse para determinar si se encuentra en el boton de stop o start
 botones:
 	cmp cx,33
-	jbe mouse_no_clic
+	jbe mouse_no_clic	;antes de stop
 	cmp cx,46
-	jge mouse_no_clic
+	jge mouse_no_clic	;despues de start
 	cmp cx,36
-	jbe boton_stop
+	jbe boton_stop		;en stop
 	cmp cx,43
-	jge boton_pausa
+	jge boton_pausa		;en start
 
-	jmp mouse_no_clic
+	jmp mouse_no_clic	;Fuera de los botones
 ;boton_x:
 primer_renglon:
-	cmp cx,0
-	jbe mouse_no_clic
-	cmp cx,79
-	jge mouse_no_clic
+	cmp cx,0			
+	jbe mouse_no_clic	;Antes de CPU
+	cmp cx,79			
+	jge mouse_no_clic	;despues de X
 	cmp cx,3
-	jbe boton_cpu
+	jbe boton_cpu		;en CPU
 	cmp cx,76
-	jge boton_x3
+	jge boton_x3		;en X
 	
-	jmp mouse_no_clic
+	jmp mouse_no_clic	;Fuera del rango
 
 boton_cpu:
-	cmp [AI_Control],1
-	je juego_vs_jugador
-	mov [AI_Control],1
+	cmp [AI_Control],1	
+	je juego_vs_jugador		;Si ai=1 cambia el valor a 0
+	mov [AI_Control],1		;Si ai=0 cambia el valor a 1
 	jmp mouse_no_clic
 
-juego_vs_jugador:
-	mov [AI_Control],0
+juego_vs_jugador:	
+	mov [AI_Control],0		;Si ai=1 cambia el valor a 0
 	jmp mouse_no_clic
 
 boton_stop:
 	;jmp boton_stop1
-	cmp [pausa],1
-	je reiniciar_juego
-	mov [pausa],1
-	mov [fin_del_juego],1
+	cmp [pausa],1			;Verifica el valor de la bandera pausa
+	je reiniciar_juego		;Si pausa=1 salta al segmento reiniciar juego, es decir cuando el juego esta pausado y se presiona stop se reinicia el juego y nadie gana
+	mov [pausa],1			;Si pausa=0 se cambia el valor a 1
+	mov [fin_del_juego],1	;Se pone la bandera fin_del_juego en 1
 
-	call IMPRIME_CUADRO
+	call IMPRIME_CUADRO		;Imprime el cuadro que indica el ganador de la partida
 	jmp mouse_no_clic
 
 boton_pausa:
-	cmp [pausa],0
-	je pausar_juego
-	cmp [fin_del_juego],1
+	cmp [pausa],0			;Verifica el valor de la bandera pausa
+	je pausar_juego			;Si pausa=0 se cambia el valor a 1
+	cmp [fin_del_juego],1	;Si la bandera fin_del_juego es 1 se mantiene la pausa, esto para evitar reiniciar un juego terminado
 	je mouse_no_clic
-	mov [pausa],0
+	mov [pausa],0			;Si fin_del_juego es 0 se cambia el valor de la bandera
 
 	jmp mouse_no_clic
 
 pausar_juego:
-	mov [pausa],1
+	mov [pausa],1			;Cambia el valor de la bandera pausa a 1
 	jmp mouse_no_clic
 
 ;boton_pause:
@@ -416,25 +418,26 @@ boton_x3:
 ; 	jmp mouse_no_clic
 reiniciar_juego:
 		;Player1
-		call BORRA_CUADRO
+		call BORRA_CUADRO		;Borra el cuadro que indica el ganador de la partida
 
-		mov al,[p1_col]
+		mov al,[p1_col]			
 		mov ah,[p1_ren]
 		mov [col_aux],al
 		mov [ren_aux],ah
-		call BORRA_PLAYER
+		call BORRA_PLAYER		;Borra la barra del jugador 1
 		;Player2
 		mov al,[p2_col]
 		mov ah,[p2_ren]
 		mov [col_aux],al
 		mov [ren_aux],ah
-		call BORRA_PLAYER
+		call BORRA_PLAYER		;Borra la barra del jugador 2
 		;Reiniciar Bola
 		mov dx,0
-		CALL BORRA_BOLA
-		call RESET_BOLA
-		call IMPRIME_BOLA
+		CALL BORRA_BOLA			;Borra la bola
+		call RESET_BOLA			;Reinicia la posicion de la bola
+		call IMPRIME_BOLA		;Imprime la bola en la posicion inicial
 		;Reiniciar obstaculos
+		;Borra obstaculo 1
 		mov bh,obstaculo1_ren
 		mov bl,obstaculo1_col
 		mov ren_aux,bh
@@ -447,6 +450,7 @@ reiniciar_juego:
 		dec ren_aux
 		call BORRA_OBSTACULO
 
+		;Borra obstaculo 2
 		mov bh,obstaculo2_ren
 		mov bl,obstaculo2_col
 		mov ren_aux,bh
@@ -462,6 +466,7 @@ reiniciar_juego:
 		;Reiniciar los datos.
 		call IMPRIME_DATOS_INICIALES
 
+		;Elimina caracteres adicionales del puntaje
 		posiciona_cursor 2,5
 		imprime_caracter_color 219,cNegro,bgNegro 
 		posiciona_cursor 2,77
@@ -470,10 +475,10 @@ reiniciar_juego:
 		mov pausa,0
 		mov [fin_del_juego],0
 		jmp mouse_no_clic
-verifica_pausa:
-	cmp [pausa],1
+verifica_pausa:		
+	cmp [pausa],1		;Verifica el valor de la bandera pausa, si es 1 se salta el segmento "juego"
 	je mouse		
-juego:
+juego:					;Segmento de codigo que contiene la logica del juego (movimiento de barras y bola)
 	;---------------------------------------------------------------------------------------------------------------------
 	mov al,[p1_col]
 	mov ah,[p1_ren]
@@ -494,16 +499,16 @@ juego:
 	;Compara el caracter en el buffer para determinar que procedimiento ejecutar
 	;jz movimiento_bola
 	jz verifica_AI
-	cmp al,49
+	cmp al,49			;Compara con 1
 	jb mueve_2
-	cmp al,50
+	cmp al,50			;Compara con 2
 	ja mueve_2
 
- 	call MUEVE_BARRA1
+ 	call MUEVE_BARRA1	;Movimiento de la barra 1
 	mov ah,00h ;vacia buffer
  	int 16h
 
-verifica_AI:
+verifica_AI:			;Si la bandera AI es 1 mueve la barra del jugador 2
 	cmp [AI_Control],1
 	je mueve_2
 	jmp movimiento_bola
@@ -521,6 +526,7 @@ mueve_2:
 	mov ah,00h ;vacia buffer
  	int 16h
 	jmp movimiento_bola
+
 control_AI:
 	mov ah,01h
  	int 16h
@@ -533,6 +539,7 @@ control_AI:
 	call MUEVE_BARRA2
 
 movimiento_bola:
+	;Vuelve a imprimir las barras despues de su movimiento
 	mov al,[p1_col]
 	mov ah,[p1_ren]
 	mov [col_aux],al
@@ -545,7 +552,7 @@ movimiento_bola:
 	mov [ren_aux],ah
 	call IMPRIME_PLAYER	;imprime jugador 2
 
-	call MUEVE_BOLA
+	call MUEVE_BOLA		;Movimiento de la bola
 	jmp mouse
 	;---------------------------------------------------------------------------------------------------------------------
 
@@ -676,13 +683,14 @@ salir:				;inicia etiqueta salir
 		imprime_cadena_color [titulo],4,cBlanco,bgNegro
 
 		call IMPRIME_DATOS_INICIALES
-
+		
+		;Imprime el boton CPU
 		posiciona_cursor 0,1
-		imprime_caracter_color 67,cRojoClaro,bgNegro
+		imprime_caracter_color 67,cRojoClaro,bgNegro	;C
 		posiciona_cursor 0,2
-		imprime_caracter_color 80,cRojoClaro,bgNegro
+		imprime_caracter_color 80,cRojoClaro,bgNegro	;P
 		posiciona_cursor 0,3
-		imprime_caracter_color 85,cRojoClaro,bgNegro
+		imprime_caracter_color 85,cRojoClaro,bgNegro	;U
 
 		ret
 	endp
@@ -712,27 +720,10 @@ salir:				;inicia etiqueta salir
 		posiciona_cursor 2,63
 		imprime_cadena_color player2,8,cBlanco,bgNegro
 
-        ;imprime obstaculo
-        ;; Deberan calcular la posicion de manera aleatoria
-        ;; no debe salir del area de juego
-        mov [col_aux],24
-        mov [ren_aux],9
+        ;imprime obstaculos generados aleatoriamente
+
         ;call IMPRIME_OBSTACULO
 		call IMPRIME_OBSTACULOS
-
-        ;imprime obstaculo
-        ;; Deberan calcular la posicion de manera aleatoria
-        ;; no debe salir del area de juego
-        mov [col_aux],60
-        mov [ren_aux],8
-        ;call IMPRIME_OBSTACULO
-
-        ;imprime obstaculo
-        ;; Deberan calcular la posicion de manera aleatoria
-        ;; no debe salir del area de juego
-        mov [col_aux],40
-        mov [ren_aux],22
-        ;call IMPRIME_OBSTACULO
 
 		;imprime players
 		;player 1
@@ -911,11 +902,6 @@ salir:				;inicia etiqueta salir
         posiciona_cursor [ren_aux],[col_aux]
         imprime_caracter_color 178,cBlanco,cNegro
 
-        ;;;;;;;;;;;;;;;;;;;;
-        ;Completar procedimiento para que el área comprendida de un obstaculo cumpla con los requisitos
-        ;;;;;;;;;;;;;;;;;;;;
-
-
 	 	ret 			;Regreso de llamada a procedimiento
 	endp	 			;Indica fin de procedimiento para el ensamblador
 	
@@ -924,33 +910,29 @@ salir:				;inicia etiqueta salir
         posiciona_cursor [ren_aux],[col_aux]
         imprime_caracter_color 219,cNegro,cNegro
 
-        ;;;;;;;;;;;;;;;;;;;;
-        ;Completar procedimiento para que el área comprendida de un obstaculo cumpla con los requisitos
-        ;;;;;;;;;;;;;;;;;;;;
-
-
 	 	ret 			;Regreso de llamada a procedimiento
 	endp	
 
-
-	MUEVE_BOLA proc
+	;movimiento de la bola
+	;Cambia la direccion de movimiento cuando llega a un borde o cuando choca conun obstaculo o una barra
+	MUEVE_BOLA proc		
 		mov ah,0
-		int 1Ah			;dx=numero de ticks 2
+		int 1Ah			;dx=numero de ticks
 
 		mov ax,dx
 		sub ax,[prev_time]
-		cmp ax,1		;Si han 2 ticks o mas ejecuta el codigo
+		cmp ax,1		;Si ha pasado 1 tick o mas ejecuta el codigo
 		jb ret_bola
 
-		mov prev_time,dx
-		call BORRA_BOLA
+		mov prev_time,dx	;Guarda el valor obtenido 
+		call BORRA_BOLA		;Elimian la bola para evitar que se dibujen rastros
 
 		;Cambio de direccion (bordes)
 		mov al,b_col			
 		cmp al, 78				;limite derecho horizontal
-		je	reset_p1
+		je	reset_p1			;Reinicia la posicion de la bola al llegar al borde horizontal
 		cmp al,1				;Limite izquierdo horizontal
-		je	reset_p2
+		je	reset_p2			;Reinicia la posicion de la bola al llegar al borde horizontal
 
 		mov al,b_ren
 		cmp al,5				;Limite superior horizontal
@@ -985,44 +967,44 @@ salir:				;inicia etiqueta salir
 
 		jmp next_pos
 
-	cambia_X:
+	cambia_X:			;Invierte la velocidad horizontal
 		neg [v_x]
 		jmp next_pos
-	cambia_Y:
+	cambia_Y:			;Invierte la velocidad vertical
 		neg [v_y]
 		jmp next_pos
-	cambia_XY:
+	cambia_XY:			;Invierte la velocidad
 		neg [v_x]
 		neg [v_y]
 		jmp next_pos
 
-	reset_p1:
+	reset_p1:				;Si la bola alcanzo la orilla derecha incrementa el puntaje de jugador 1	
 		mov dx,1
-		call RESET_BOLA
-		call IMPRIME_BOLA
+		call RESET_BOLA		;Reinicia la posicion de la bola
+		call IMPRIME_BOLA	;Imprime la bola
 		
-		cmp p1_score,10
-		jae termina_juego
+		cmp p1_score,10		
+		jae termina_juego	;Si el jugador alcanzo diez puntos termina el juego
 
 		jmp ret_bola
-	reset_p2:
+	reset_p2:				;Si la bola alcanzo la orilla izquierda incrementa el puntaje de jugador 2
 		mov dx,2
-		call RESET_BOLA
-		call IMPRIME_BOLA
+		call RESET_BOLA		;Reinicia la posicion de la bola
+		call IMPRIME_BOLA	;Imprime la bola
 
 		cmp p2_score,10
-		jae termina_juego
+		jae termina_juego	;Si el jugador alcanzo diez puntos termina el juego
 
 		jmp ret_bola
 
-	termina_juego:
-		mov [pausa],1
-		mov [fin_del_juego],1
-		call IMPRIME_CUADRO
+	termina_juego:				;Si se alcanzaron diez puntos termina el juego
+		mov [pausa],1			;Activa la bandera pausa
+		mov [fin_del_juego],1	;Activa la bandera fin del juego
+		call IMPRIME_CUADRO		;Imprime el ganador del juego
 		jmp ret_bola
 
-	next_pos:
-		mov al, v_x
+	next_pos:					;Calcula la proxima posicion de la pelota
+		mov al, v_x				
 		mov ah, v_y
 		add [b_col],al
 		add [b_ren],ah
@@ -1036,21 +1018,21 @@ salir:				;inicia etiqueta salir
 		cmp dx,1
 		je punto_p1
 		cmp dx,2
-		je punto_p2
+		je punto_p2	
 		jmp ret_reset_bola
-	punto_p1:
+	punto_p1:					;Aumenta el puntaje del jugador 1
 		inc [p1_score]
 		mov [col_aux],4
 		mov bl,[p1_score]
 		call IMPRIME_SCORE_BL
 		jmp ret_reset_bola
-	punto_p2:
+	punto_p2:					;Aumenta el puntaje del jugador 2
 		inc [p2_score]
 		mov [col_aux],76
 		mov bl,[p2_score]
 		call IMPRIME_SCORE_BL
 	ret_reset_bola:
-		mov b_col,40
+		mov b_col,40			;Reinicia la pelota a su posicion inicial
 		mov b_ren,14
 		;mov v_x,1
 		;mov v_y,1
@@ -1083,39 +1065,41 @@ salir:				;inicia etiqueta salir
 
 		jmp mueve_barra_ret
 
-	dec_p1:
+	dec_p1:						;Decrementa la posicion del jugador 1
 		mov bl,[p1_ren]
-		cmp bl,7d
+		cmp bl,7d				;Evita que la barra pase del marco superior		
 		jbe mueve_barra_ret
 		
 		mov al,[p1_col]
 		mov ah,[p1_ren]
 		mov [col_aux],al
 		mov [ren_aux],ah
-		call BORRA_PLAYER
-		dec [p1_ren]
-		jmp	mueve_barra_ret
+		call BORRA_PLAYER		;Borra la barra del jugador 1
+		dec [p1_ren]			;Decrementa la posicion
+		jmp	mueve_barra_ret		;Imprime la barra del jugador 1
 
-	inc_p1:
+	inc_p1:						;Incrementa la barra del jugador 1
 		mov bl,[p1_ren]
-		cmp bl,21d
+		cmp bl,21d				;Evita que la barra pase del marco inferior
 		jae mueve_barra_ret
 
 		mov al,[p1_col]
 		mov ah,[p1_ren]
 		mov [col_aux],al
 		mov [ren_aux],ah
-		call BORRA_PLAYER
-		inc [p1_ren]
-		jmp	mueve_barra_ret
+		call BORRA_PLAYER		;Borra la barra del jugador 1
+		inc [p1_ren]			;Decrementa la posicion
+		jmp	mueve_barra_ret		;Imprime la barra del jugador 1
 	
 	mueve_barra_ret:
 		ret
 	endp
 
 	MUEVE_BARRA2 proc
-		cmp [AI_Control],1
+		cmp [AI_Control],1		;Verifica el valro de la bandera AI
 		je computadora
+
+		;Logica para el control por un usuario
 		;compara el buffer con 9 para mover la barra a la izquierda
 		mov ah,01h
 		int 16h
@@ -1130,62 +1114,62 @@ salir:				;inicia etiqueta salir
 
 		jmp mueve_barra2_ret
 
-	dec_p2:
+	dec_p2:						;Decrementa la posicion del jugador 2
 		mov bl,[p2_ren]
-		cmp bl,7d
+		cmp bl,7d				;Evita que supere el marco superior
 		jbe mueve_barra2_ret
 		
 		mov al,[p2_col]
 		mov ah,[p2_ren]
 		mov [col_aux],al
 		mov [ren_aux],ah
-		call BORRA_PLAYER
-		dec [p2_ren]
-		jmp	mueve_barra2_ret
+		call BORRA_PLAYER		;Elimina la barra
+		dec [p2_ren]			;Decrementa la posicion
+		jmp	mueve_barra2_ret	
 
-	inc_p2:
+	inc_p2:						;Aumenta la posicion del jugador 2
 		mov bl,[p2_ren]
-		cmp bl,21d
+		cmp bl,21d				;Evita que supere el marco inferior
 		jae mueve_barra2_ret
 
 		mov al,[p2_col]
 		mov ah,[p2_ren]
 		mov [col_aux],al
 		mov [ren_aux],ah
-		call BORRA_PLAYER
-		inc [p2_ren]
+		call BORRA_PLAYER		;Elimina la barra del jugador 2
+		inc [p2_ren]			;Aumenta la posicion del jugador 2
 		jmp	mueve_barra2_ret
 
-	computadora:
+	computadora:				;Logica para que el cpu controle el jua=gador 2
 
 		mov ah,0
 		int 1Ah
 		mov ax,dx
 		sub ax,[prev_time_barra]
-		cmp ax,2
-		jb mueve_barra2_ret
+		cmp ax,2				;Determina si han pasado mas de dos ticks desde el ultimo movimiento de la barra
+		jb mueve_barra2_ret		;Si han pasado menos de dos ticks sale del procedimiento
 
-		mov [prev_time_barra],dx
+		mov [prev_time_barra],dx;Guarda el valor obtenido como valor previo
 		mov al,[b_ren]
 		cmp al,[p2_ren]
-		jl dec_p2
-		jmp inc_p2
+		jl dec_p2				;Si la barra esta debajo de la bola mueve la barra hacia arriba
+		jmp inc_p2				;Si la barra esta arriba de la bola mueve la barra hacia abajo
 
 	mueve_barra2_ret:
 		ret
 	endp
 
-	IMPRIME_OBSTACULOS proc 
+	IMPRIME_OBSTACULOS proc 	;Logica para generar aleatoriamente la posicion de ls obstaculos
 		mov ah,0				;tiempo del sistema
 		int 1Ah					;dx=tiempo
-		mov [ren_aux],6
-		mov [col_aux],20
-		mov cx,2
+		mov [ren_aux],6			
+		mov [col_aux],20		;Posicion base del obstaculo
+		mov cx,2				;El loop se ejecuta 2 veces
 
-		lea di,obstaculo1_ren
-		lea si,obstaculo1_col
+		lea di,obstaculo1_ren	
+		lea si,obstaculo1_col	;Obtiene la posicion del obstaculo 1
 
-		xor di,di
+		xor di,di				;di=0
 
 
 	INICIO_OBSTACULOS:
@@ -1194,54 +1178,44 @@ salir:				;inicia etiqueta salir
 		mov [aux],dx
 		mov ax,dx
 		mov dx,0
-		mov aux_division,39
-		div aux_division
-		add [col_aux],dl
+		mov aux_division,39		;39=Rango horizontal disponible
+		div aux_division		;Divide el tiempo del sistema entre 39
+		add [col_aux],dl		;dl contiene el modulo de la division, este actua como el desplazamiento a la posicion base de la columna
 
-		; mov ax,39
-		; mov [aux],dx
-		; mov dx,0
-		; div [aux]
-		; add [col_aux],dl
-		;cordenada en y
-		; mov ax,6
-		; mov dx,0
-		; div [aux]
-		; add [ren_aux],dl
 		mov ax,[aux]
 		mov dx,0
-		mov aux_division,6
-		div aux_division
-		add [ren_aux],dl
+		mov aux_division,6		;6=Rango vertical disponible
+		div aux_division		;Divide el tiempo entre 6
+		add [ren_aux],dl		;dl contiene el modulo de la division, este actua como desplazamiento a la posicion base el renglon
 
 		mov bh,ren_aux
-		mov [obstaculo1_ren+di],bh
+		mov [obstaculo1_ren+di],bh	
 		mov bh,col_aux
-		mov [obstaculo1_col+di],bh
+		mov [obstaculo1_col+di],bh	;Asigna al obstaculo la posicion calculada
 
-		push cx
+		push cx						;Almacena el valor de la variable de control del loop
 		call IMPRIME_OBSTACULO
 		inc [col_aux]
 		call IMPRIME_OBSTACULO
 		inc [ren_aux]
 		call IMPRIME_OBSTACULO
 		dec [col_aux]
-		call IMPRIME_OBSTACULO
-		pop cx
+		call IMPRIME_OBSTACULO		;Imprime los 4 caracteres del obstaculo
+		pop cx						;Recupera el valor de la variable de control
 
-		mov [ren_aux],15
+		mov [ren_aux],15			;Asigna la posicion base al obstaculo 2
 		mov [col_aux],20
-		mov dx,[aux]
+		mov dx,[aux]				;Aumenta el valor de dx para garantizar una posicion diferente
 		add dx,256
 
-		inc di
+		inc di						;Aumenta di para almacenar la posicion dle proximo obstaculo
 
 		loop INICIO_OBSTACULOS
 		
 		ret
 	endp
 
-	BORRA_CUADRO proc
+	BORRA_CUADRO proc				;Elimina el cuadro que indica el ganador de la partida, imprime caracteres negros sobre  el area del cuadro
 		mov cx,16
 		loop_limpia_cuadro1:
 		mov [col_aux],31
@@ -1280,7 +1254,8 @@ salir:				;inicia etiqueta salir
 		ret
 	endp
 
-	IMPRIME_CUADRO proc
+	IMPRIME_CUADRO proc												;Imprime el cuadro que indica el ganador de la partida
+		;Esquinas del cuadro
 		posiciona_cursor 10,32
 		imprime_caracter_color marcoEsqSupIzq,cAmarillo,bgNegro
 		posiciona_cursor 10,47
@@ -1290,7 +1265,7 @@ salir:				;inicia etiqueta salir
 		posiciona_cursor 15,47
 		imprime_caracter_color marcoEsqInfDer,cAmarillo,bgNegro
 
-
+		;Marcos horizontales
 		mov cx,14
 		loop_cuadro_horizontal:
 		mov [col_aux],32
@@ -1304,6 +1279,7 @@ salir:				;inicia etiqueta salir
 		pop cx
 		loop loop_cuadro_horizontal
 
+		;Limpia el interior del marco
 		mov cx,14
 		loop_limpia1:
 		mov [col_aux],32
@@ -1328,6 +1304,7 @@ salir:				;inicia etiqueta salir
 		pop cx
 		loop loop_limpia2
 
+		;Imprime los marcos verticales
 		mov cx,4
 		loop_cuadro_vertical:
 		mov [ren_aux],10
@@ -1340,13 +1317,14 @@ salir:				;inicia etiqueta salir
 		pop cx
 		loop loop_cuadro_vertical
 
-
+		;Determina el ganador de la partida comparando los puntajes
 		mov al,[p1_score]
+		cmp [p2_score],al	
+		ja	imprime_p2		;Si p2_score es mayor el jugador 2 gana
 		cmp [p2_score],al
-		ja	imprime_p2
-		cmp [p2_score],al
-		je imprime_empate
+		je imprime_empate	;Si los puntajes son iguales es un empate
 
+		;Gana el jugador 1
 		posiciona_cursor 12,36
 		imprime_cadena_color player1,8,cBlanco,bgNegro
 
@@ -1355,6 +1333,7 @@ salir:				;inicia etiqueta salir
 		jmp ret_imprime_cuadro
 
 	imprime_p2:
+		;Gana el jugador 2
 		posiciona_cursor 12,36
 		imprime_cadena_color player2,8,cBlanco,bgNegro
 
@@ -1363,7 +1342,7 @@ salir:				;inicia etiqueta salir
 		jmp ret_imprime_cuadro
 
 	imprime_empate:
-
+		;Empate
 		posiciona_cursor 12,38
 		imprime_cadena_color [empate],4,cBlanco,bgNegro
 
