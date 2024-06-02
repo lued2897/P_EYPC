@@ -59,6 +59,9 @@ player2 		db 		"Player 2"
 p1_score 		db 		0
 p2_score		db 		0
 
+;Variable para definir si el jugador 2 se controla por la maquina
+AI_Control		db 		1
+
 ;variables para guardar la posición del player 1
 p1_col			db 		6
 p1_ren			db 		14
@@ -454,12 +457,28 @@ juego:
  	mov ah,01h
  	int 16h
  	;Si bandera Z=0, entonces hay algo en el buffer, si Z=1, entonces el buffer esta vacio
- 	jz movimiento_bola
 
- 	call MUEVE_BARRA
-; vacia_buffer:
- 	mov ah,00h ;vacia buffer
+	;Compara el caracter en el buffer para determinar que procedimiento ejecutar
+	jz movimiento_bola
+	cmp al,49
+	jb mueve_2
+	cmp al,50
+	ja mueve_2
+
+ 	call MUEVE_BARRA1
+	mov ah,00h ;vacia buffer
  	int 16h
+	jmp movimiento_bola
+
+mueve_2:
+	mov ah,01h
+ 	int 16h
+ 	;Si bandera Z=0, entonces hay algo en el buffer, si Z=1, entonces el buffer esta vacio
+ 	jz movimiento_bola
+	call MUEVE_BARRA2
+	mov ah,00h ;vacia buffer
+ 	int 16h
+ 	
 
 movimiento_bola:
 	call MUEVE_BOLA
@@ -971,7 +990,7 @@ salir:				;inicia etiqueta salir
 		ret
 	endp
 
-	MUEVE_BARRA proc
+	MUEVE_BARRA1 proc
 		;mov ah,01h
 		;int 16h
 		;Si bandera Z=0, entonces hay algo en el buffer, si Z=1, entonces el buffer esta vacio
@@ -988,18 +1007,6 @@ salir:				;inicia etiqueta salir
 		int 16h
 		cmp al,50d		;La tecla 2 (50 en ascii) mueve la barra hacia arriba
 		je dec_p1
-
-		;compara el buffer con 9 para mover la barra a la izquierda
-		mov ah,01h
-		int 16h
-		cmp al,57d		;La tecla 9 (49 en ascii) mueve la barra hacia abajo
-		je inc_p2
-
-		;compara el buffer con 0 para mover la barra a la derecha
-		mov ah,01h
-		int 16h
-		cmp al,48d		;La tecla 0 (50 en ascii) mueve la barra hacia arriba
-		je dec_p2
 
 		jmp mueve_barra_ret
 
@@ -1028,11 +1035,31 @@ salir:				;inicia etiqueta salir
 		call BORRA_PLAYER
 		inc [p1_ren]
 		jmp	mueve_barra_ret
+	
+	mueve_barra_ret:
+		ret
+	endp
+
+	MUEVE_BARRA2 proc
+
+		;compara el buffer con 9 para mover la barra a la izquierda
+		mov ah,01h
+		int 16h
+		cmp al,57d		;La tecla 9 (49 en ascii) mueve la barra hacia abajo
+		je inc_p2
+
+		;compara el buffer con 0 para mover la barra a la derecha
+		mov ah,01h
+		int 16h
+		cmp al,48d		;La tecla 0 (50 en ascii) mueve la barra hacia arriba
+		je dec_p2
+
+		jmp mueve_barra2_ret
 
 	dec_p2:
 		mov bl,[p2_ren]
 		cmp bl,7d
-		jbe mueve_barra_ret
+		jbe mueve_barra2_ret
 		
 		mov al,[p2_col]
 		mov ah,[p2_ren]
@@ -1040,12 +1067,12 @@ salir:				;inicia etiqueta salir
 		mov [ren_aux],ah
 		call BORRA_PLAYER
 		dec [p2_ren]
-		jmp	mueve_barra_ret
+		jmp	mueve_barra2_ret
 
 	inc_p2:
 		mov bl,[p2_ren]
 		cmp bl,21d
-		jae mueve_barra_ret
+		jae mueve_barra2_ret
 
 		mov al,[p2_col]
 		mov ah,[p2_ren]
@@ -1053,11 +1080,9 @@ salir:				;inicia etiqueta salir
 		mov [ren_aux],ah
 		call BORRA_PLAYER
 		inc [p2_ren]
-		jmp	mueve_barra_ret
-	
-	mueve_barra_ret:
-		;mov ah,00h ;vacia buffer
-		;int 16h
+		jmp	mueve_barra2_ret
+
+	mueve_barra2_ret:
 		ret
 	endp
 
