@@ -100,7 +100,7 @@ obstaculo2_col db 0
 conta 			db 		0
 
 ;Variable para controlar si se ejecuta el segmento "juego"
-pausa			db 		0	;1=pausa, 0=continua
+pausa			db 		1	;1=pausa, 0=continua
 fin_del_juego	db 		0
 
 ;Variables que sirven de parametros para el procedimiento IMPRIME_BOTON
@@ -472,7 +472,7 @@ reiniciar_juego:
 		posiciona_cursor 2,77
 		imprime_caracter_color 219,cNegro,bgNegro
 
-		mov pausa,0
+		mov pausa,1
 		mov [fin_del_juego],0
 		jmp mouse_no_clic
 verifica_pausa:		
