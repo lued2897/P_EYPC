@@ -260,13 +260,13 @@ inicio:					;etiqueta inicio
 	mov ax,0900h	;opcion 9 para interrupcion 21h
 	int 21h			;interrupcion 21h. Imprime cadena.
 
+	jmp teclado		;salta a 'teclado'
+imprime_ui:
 	mov ah,0				;Inicializa en tiempo
     int 1Ah
     mov prev_time,dx		;Establece el tiempo de inicio para calcular los ticks
 	mov prev_time_barra,dx
 
-	jmp teclado		;salta a 'teclado'
-imprime_ui:
 	clear 					;limpia pantalla
 	oculta_cursor_teclado	;oculta cursor del mouse
 	apaga_cursor_parpadeo 	;Deshabilita parpadeo del cursor
@@ -928,6 +928,7 @@ salir:				;inicia etiqueta salir
 		call BORRA_BOLA		;Elimian la bola para evitar que se dibujen rastros
 
 		;Cambio de direccion (bordes)
+	Cambia_direccion_borde:
 		mov al,b_col			
 		cmp al, 78				;limite derecho horizontal
 		je	reset_p1			;Reinicia la posicion de la bola al llegar al borde horizontal
@@ -941,7 +942,7 @@ salir:				;inicia etiqueta salir
 		je cambia_Y
 
 		;Cambio de direccion (barra/obstaculos)
-
+	Cambia_direccion_obs:
 		mov cl, b_col
 		mov ch, b_ren
 
@@ -972,10 +973,20 @@ salir:				;inicia etiqueta salir
 		jmp next_pos
 	cambia_Y:			;Invierte la velocidad vertical
 		neg [v_y]
-		jmp next_pos
+		cmp al,5				;Limite superior horizontal
+		je Cambia_direccion_obs
+		cmp al,23
+		jmp Cambia_direccion_obs
 	cambia_XY:			;Invierte la velocidad
 		neg [v_x]
 		neg [v_y]
+
+		mov al,b_ren
+		cmp al,5				;Limite superior horizontal
+		je Cambia_direccion_borde
+		cmp al,23				;Limite inferior horizontal
+		je Cambia_direccion_borde
+
 		jmp next_pos
 
 	reset_p1:				;Si la bola alcanzo la orilla derecha incrementa el puntaje de jugador 1	
